@@ -1,5 +1,7 @@
 #import libraries
 import pytest
+from datetime import datetime, timezone
+
 
 
 #prediction fixtures
@@ -307,3 +309,61 @@ def mock_api_alert():
             "active_period": [{"start": "2024-01-15T08:00:00-05:00", "end": None}],
         },
     }
+    
+    
+@pytest.fixture
+def mock_db_connection():
+    with patch("pipeline.mbta_db_loader.get_connection") as mock_conn:
+        mock_cursor = MagicMock()
+        mock_conn.return_value.__enter__ = MagicMock(return_value=MagicMock(cursor=MagicMock(return_value=mock_cursor)))
+        mock_conn.return_value.__exit__ = MagicMock(return_value=False)
+        yield mock_conn, mock_cursor
+
+
+@pytest.fixture
+def sample_predictions():
+    return [
+        {
+            "route": "Red",
+            "stop_id": "place-pktrm",
+            "direction_id": 0,
+            "arrival_time": datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+            "departure_time": datetime(2024, 1, 15, 10, 31, tzinfo=timezone.utc),
+            "status": None,
+            "schedule_relationship": "SCHEDULED",
+            "fetched_at": datetime(2024, 1, 15, 10, 29, tzinfo=timezone.utc),
+        }
+    ]
+
+
+@pytest.fixture
+def sample_vehicles():
+    return [
+        {
+            "vehicle_id": "vehicle-1234",
+            "route": "Red",
+            "latitude": 42.3601,
+            "longitude": -71.0589,
+            "bearing": 180,
+            "speed": 15.5,
+            "current_status": "IN_TRANSIT_TO",
+            "occupancy_status": "MANY_SEATS_AVAILABLE",
+            "fetched_at": datetime(2024, 1, 15, 10, 29, tzinfo=timezone.utc),
+        }
+    ]
+
+
+@pytest.fixture
+def sample_alerts():
+    return [
+        {
+            "alert_id": "alert-99",
+            "header": "Red Line delays",
+            "severity": 7,
+            "effect": "SIGNIFICANT_DELAYS",
+            "cause": "TECHNICAL_PROBLEM",
+            "active_period_start": datetime(2024, 1, 15, 8, 0, tzinfo=timezone.utc),
+            "active_period_end": None,
+            "fetched_at": datetime(2024, 1, 15, 10, 29, tzinfo=timezone.utc),
+        }
+    ]
