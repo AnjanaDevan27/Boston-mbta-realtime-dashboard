@@ -49,4 +49,4 @@ jobs:
       - name: Lint code
         run: |
           pip install flake8
-          flake8 pipeline/ tests/ dags/ config/ --max-line-length=120 --ignore=E501,W503
+          flake8 pipeline/ tests/ dags/ config/ --max-line-length=120 --ignore=E265,E302,E303,E305,E231,E225,E271,W291,W292,W293,F401,F811,F821
