@@ -46,12 +46,25 @@ def transform_vehicles(records):
         lat = r.get("latitude")
         lon = r.get("longitude")
         
-        if lat is not None and not (-90 <= lat <= 90):
-            logger.warning(f"Invalid latitude for vehicle {r.get('vehicle_id')}: {lat}")
-            lat = None
-        if lon is not None and not (-180 <= lon <= 180):
-            logger.warning(f"Invalid longitude for vehicle {r.get('vehicle_id')}: {lon}")
-            lon = None    
+        if lat is not None:
+            try:
+                lat = float(lat)
+                if not (-90 <= lat <= 90):
+                    logger.warning(f"Invalid latitude for vehicle {r.get('vehicle_id')}: {lat}")
+                    lat = None
+            except (TypeError, ValueError):
+                logger.warning(f"Non-numeric latitude for vehicle {r.get('vehicle_id')}: {lat}")
+                lat = None
+
+        if lon is not None:
+            try:
+                lon = float(lon)
+                if not (-180 <= lon <= 180):
+                    logger.warning(f"Invalid longitude for vehicle {r.get('vehicle_id')}: {lon}")
+                    lon = None
+            except (TypeError, ValueError):
+                logger.warning(f"Non-numeric longitude for vehicle {r.get('vehicle_id')}: {lon}")
+                lon = None   
         cleaned.append({
             "vehicle_id": _clean_str(r.get("vehicle_id"),50),
             "route": _clean_str(r.get("route"),20),
