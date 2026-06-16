@@ -93,3 +93,22 @@ def init_schema():
     logger.info("Schema initialized successfully")
     
     
+    
+def delete_old_records(days: int = 30) -> int:
+    """Delete records older than specified days to manage storage."""
+    sql_predictions = "DELETE FROM predictions WHERE fetched_at < NOW() - INTERVAL '%s days'"
+    sql_vehicles = "DELETE FROM vehicles WHERE fetched_at < NOW() - INTERVAL '%s days'"
+    sql_alerts = "DELETE FROM alerts WHERE fetched_at < NOW() - INTERVAL '%s days'"
+    
+    total_deleted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql_predictions, (days,))
+            total_deleted += cur.rowcount
+            cur.execute(sql_vehicles, (days,))
+            total_deleted += cur.rowcount
+            cur.execute(sql_alerts, (days,))
+            total_deleted += cur.rowcount
+    
+    logger.info(f"Deleted {total_deleted} records older than {days} days")
+    return total_deleted

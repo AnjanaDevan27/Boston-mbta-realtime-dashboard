@@ -115,3 +115,20 @@ def mbta_realtime_etl_dag():
         setup_logging()
         init_schema()
         logger.info("Schema initialised successfully")
+        
+    @task()
+    def cleanup_old_records():
+        from pipeline.mbta_db_loader import delete_old_records
+        deleted = delete_old_records(days=30)
+        logger.info(f"Cleanup complete — {deleted} old records removed")
+        
+        
+        
+    raw_data = extract_transit_data()
+    clean_data = transform_transit_data(raw_data)
+    load_transit_data(clean_data)
+    initialise_schema()
+    cleanup_old_records()
+    
+    
+mbta_realtime_etl_dag()              # ← this stays at the very bottom
