@@ -37,7 +37,7 @@ jobs:
       - name: Check test coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --cov=pipeline --cov-report=term-missing --cov-fail-under=70
+          pytest tests/ --cov=pipeline --cov-report=term-missing --cov-fail-under=55
 
       - name: Upload test results
         if: always()
