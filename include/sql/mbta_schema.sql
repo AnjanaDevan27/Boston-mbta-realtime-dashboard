@@ -9,8 +9,9 @@ CREATE TABLE IF NOT EXISTS predictions (
     departure_time  TIMESTAMPTZ,
     status          VARCHAR(50),
     schedule_relationship VARCHAR(50),
-    fetched_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(
+    fetched_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 
 CREATE TABLE IF NOT EXISTS vehicles (
     id              SERIAL PRIMARY KEY,
@@ -22,7 +23,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
     speed           DOUBLE PRECISION,
     current_status  VARCHAR(50),
     occupancy_status VARCHAR(50),
-    fetched_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    fetched_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 
@@ -33,9 +34,9 @@ CREATE TABLE IF NOT EXISTS alerts (
     severity        SMALLINT,
     effect          VARCHAR(100),
     cause           VARCHAR(100),
-    active_period_starts TIMESTAMPTZ,
-    active_period_ends TIMESTAMPTZ,
-    fetched_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    active_period_start TIMESTAMPTZ,
+    active_period_end TIMESTAMPTZ,
+    fetched_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS pipeline_runs (

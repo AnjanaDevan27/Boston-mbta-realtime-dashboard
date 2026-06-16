@@ -3,7 +3,7 @@ import logging
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from config.settings import MBTA_API_KEY, MBTA_BASE_URL, MBTA_ROUTES
+from config.mbta_pipeline_config import MBTA_API_KEY, MBTA_BASE_URL, MBTA_ROUTES
 
 logger = logging.getLogger(__name__)
 
@@ -48,16 +48,38 @@ def fetch_predictions() -> list[dict]:
             stop = rel.get("stop", {}).get("data")
             records.append({
                 "route": route,
-                "stop_id": stop["id" if stop else None],
+                "stop_id": stop["id"] if stop else None,
                 "direction_id": atttr.get("direction_id"),
                 "arrival_time": atttr.get("arrival_time"),
                 "departure_time": atttr.get("departure_time"),
                 "status": atttr.get("status"),
                 "schedule_relationship": atttr.get("schedule_relationship"),       
             })
-        logger.debug(f"Fetched {len(data)} predictions for route {route}")
+            logger.debug(f"Fetched {len(data)} predictions for route {route}")
         logger.info(f"Total predictions fetched: {len(records)}")
     return records
+
+
+def fetch_vehicles() -> list[dict]:
+    """Fetch vehicle positions for specified routes."""
+    records = []
+    for route in MBTA_ROUTES:
+        data = _get("vehicles", {"filter[route]": route})
+        for item in data:
+            attr = item.get("attributes", {})
+            records.append({
+                "vehicle_id": item.get("id"),
+                "route": route,
+                "latitude": attr.get("latitude"),
+                "longitude": attr.get("longitude"),
+                "bearing": attr.get("bearing"),
+                "speed": attr.get("speed"),
+                "current_status": attr.get("current_status"),
+                "occupancy_status": attr.get("occupancy_status"),
+            })
+    logger.info(f"Total vehicles fetched: {len(records)}")
+    return records
+
 
 def  fetch_alerts() -> list[dict]:
     """Fetch alerts for specified routes."""
