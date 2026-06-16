@@ -76,8 +76,11 @@ def mbta_realtime_etl_dag():
         clean_vehicles = transform_vehicles(raw_data["vehicles"])
         clean_alerts = transform_alerts(raw_data["alerts"])
 
-        logger.info(f"Transformed {len(clean_predictions)} predictions, {len(clean_vehicles)} vehicles, {len(clean_alerts)} alerts")
-
+        logger.info(
+            f"Transformed {len(clean_predictions)} predictions, "
+            f"{len(clean_vehicles)} vehicles, "
+            f"{len(clean_alerts)} alerts"
+        )
         return {
             "predictions": clean_predictions,
             "vehicles": clean_vehicles,
