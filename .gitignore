@@ -1,0 +1,17 @@
+#environment - never cmit real secrets
+.env
+
+#python cache files - auto generated (don't need to be tracked)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+#logs - gnerated at runtime, not source code
+logs/*.log
+
+#OS files
+.DS_Store
+
+#IDE files
+.vscode/
