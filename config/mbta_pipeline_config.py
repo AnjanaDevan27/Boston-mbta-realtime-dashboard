@@ -12,10 +12,10 @@ MBTA_ROUTES = ["Red", "Blue", "Orange","Green-B","Green-C","Green-D","Green-E","
 #database
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT")),
+    "port": int(os.getenv("DB_PORT", 5432)),
     "dbname": os.getenv("DB_NAME","postgres"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD")
+    "user": os.getenv("DB_USER","mbta_user"),
+    "password": os.getenv("DB_PASSWORD","")
 }
 
 #pipeline
