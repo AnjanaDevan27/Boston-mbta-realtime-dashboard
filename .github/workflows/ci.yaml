@@ -45,3 +45,8 @@ jobs:
         with:
           name: test-results
           path: .pytest_cache/
+
+      - name: Lint code
+        run: |
+          pip install flake8
+          flake8 pipeline/ tests/ dags/ config/ --max-line-length=120 --ignore=E501,W503
