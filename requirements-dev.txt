@@ -1,7 +1,19 @@
+# API & HTTP
 requests==2.31.0
 urllib3==2.1.0
+
+# Database
 psycopg2-binary==2.9.9
+
+# Environment & Config
 python-dotenv==1.0.0
+
+# Data export
+pandas
+
+# Testing
 pytest==7.4.0
 pytest-cov
+
+# Linting
 flake8
