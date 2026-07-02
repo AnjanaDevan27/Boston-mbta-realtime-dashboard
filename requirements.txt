@@ -1,12 +1,12 @@
 # API & HTTP
-requests==2.31.0
-urllib3==2.1.0
+requests
+urllib3
 
 # Database
-psycopg2-binary==2.9.9
+psycopg2-binary
 
 # Environment & Config
-python-dotenv==1.0.0
+python-dotenv
 
 # Data export
 pandas
