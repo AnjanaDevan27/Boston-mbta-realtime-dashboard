@@ -1,208 +1,263 @@
-# POS DATA CLEANING, MARKET BASKET ANALYSIS & BRAND AFFINITY PLATFORM
+# Boston MBTA Real-Time Dashboard
 
-This repository contains an end-to-end data pipeline for cleaning beauty supply POS data, generating copurchase and brand-affinity analytics, enriching results with Revlon metadata, and serving insights through a Streamlit + DuckDB application.
+![CI Pipeline](https://github.com/AnjanaDevan27/Boston-mbta-realtime-dashboard/actions/workflows/ci.yaml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.13-blue)
+![PostgreSQL](https://img.shields.io/badge/postgresql-15-blue)
+![AWS](https://img.shields.io/badge/aws-EC2%20%7C%20RDS-orange)
+![Airflow](https://img.shields.io/badge/airflow-3.2.2-brightgreen)
+![Streamlit](https://img.shields.io/badge/streamlit-deployed-brightgreen)
 
----
+A production-grade real-time ETL pipeline that fetches live transit data from the MBTA V3 API every 2 minutes, orchestrated by Apache Airflow on Astronomer, stored in PostgreSQL on AWS RDS, and visualized in an interactive Streamlit dashboard.
 
-## OVERVIEW
-
-This project supports:
-
-- Cleaning raw POS transaction files
-- Combining cleaned datasets across time
-- Detecting newly introduced UPCs
-- Market Basket Analysis (MBA)
-- UPC-level copurchase analytics
-- Brand-level affinity analytics
-- Revlon metadata enrichment
-- Interactive analytics via Streamlit + DuckDB
-- Cloud storage and retrieval via Google Cloud Storage (GCS)
+**[Live Dashboard](https://boston-mbta-realtime-dashboard-z2hhv5gwxdiqqsyhxi6rtt.streamlit.app)**
 
 ---
 
-## SYSTEM REQUIREMENTS
-
-- Python 3.10 or later
-- macOS, Linux, or Windows
-- Git
-- Google Cloud Platform account with access to GCS
-
----
-
-## RUN FROM SCRATCH (STEP-BY-STEP)
-
-### 1. Clone or unzip the project
-
-If using Git:
+## Architecture
 
 ```
-git clone <repo-url>
-cd pos-data-cleaning-automation
-```
+MBTA V3 API
+     ↓
+mbta_api_client.py (Extract)
+     ↓
+mbta_data_transformer.py (Transform)
+     ↓
+mbta_db_loader.py (Load)
+     ↓
+PostgreSQL on AWS RDS
+     ↓
+Streamlit Dashboard (Streamlit Cloud)
 
-If using a ZIP file:
-
-```
-unzip pos-data-cleaning-automation.zip
-cd pos-data-cleaning-automation
-```
-
-Verify location:
-
-```
-ls
+Orchestration:  Apache Airflow 3.2.2 on Astronomer (every 2 minutes)
+CI/CD:          GitHub Actions (65 tests on every push)
+Server:         AWS EC2 t3.micro (us-east-2)
 ```
 
 ---
 
-### 2. Create a clean virtual environment
+## Project Structure
 
 ```
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Windows (PowerShell):
-
-```
-.venv\Scripts\Activate.ps1
-```
-
-Verify Python version:
-
-```
-python --version
-```
-
----
-
-### 3. Repair pip and install dependencies
-
-```
-python -m ensurepip --upgrade
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install -r requirements.txt
-```
-
-Verify environment:
-
-```
-python - <<EOF
-import pandas, duckdb, streamlit
-print("Environment OK")
-EOF
+boston-mbta-realtime-dashboard/
+├── dags/
+│   └── mbta_realtime_etl_dag.py       # Airflow DAG (TaskFlow API, Airflow 3.2.2)
+├── pipeline/
+│   ├── mbta_api_client.py             # MBTA V3 API calls with retry logic
+│   ├── mbta_data_transformer.py       # Data cleaning and validation
+│   └── mbta_db_loader.py              # PostgreSQL bulk insert
+├── config/
+│   ├── mbta_pipeline_config.py        # Centralized configuration
+│   ├── stop_names.json                # 265 stop names across 7 routes
+│   ├── stop_coords.json               # GPS coordinates for 118 stops
+│   └── route_shapes.json              # Encoded polylines for route map overlays
+├── include/sql/
+│   └── mbta_schema.sql                # Database schema and indexes
+├── tests/
+│   ├── conftest.py                    # Shared fixtures
+│   ├── test_mbta_api_client.py        # API client tests (20)
+│   ├── test_mbta_data_transformer.py  # Transformer tests (29)
+│   └── test_mbta_data_loader.py       # DB loader tests (15)
+├── .github/workflows/
+│   └── ci.yaml                        # GitHub Actions CI pipeline
+├── Dockerfile                         # Astro Runtime image (Airflow 3.2.2)
+├── dashboard.py                       # Streamlit dashboard
+├── run_pipeline.py                    # Local runner (schedule library)
+├── .env.example                       # Environment variable template
+├── .streamlit/secrets.toml.example    # Streamlit Cloud secrets template
+├── Makefile                           # Project automation
+├── requirements.txt                   # Production dependencies
+└── requirements-dev.txt               # Development dependencies
 ```
 
 ---
 
-## GOOGLE CLOUD SETUP
+## Data Pipeline
 
-### 4. Service account key
+The pipeline is orchestrated by Apache Airflow 3.2.2 on Astronomer and runs every 2 minutes. It collects three live data streams:
 
-Place the key at:
+| Data | Endpoint | Records/run |
+|------|----------|-------------|
+| Predictions | `/predictions` | ~2,200 |
+| Vehicle positions | `/vehicles` | ~114 |
+| Service alerts | `/alerts` | ~8 |
+
+Each DAG run executes five tasks in sequence:
 
 ```
-gcp/config/pos-data-key.json
+initialise_schema → extract_transit_data → transform_transit_data → load_transit_data → cleanup_old_records
 ```
+
+1. **initialise_schema** — creates tables if they don't exist
+2. **extract_transit_data** — fetches from MBTA V3 API with automatic retries and exponential backoff
+3. **transform_transit_data** — validates coordinates, parses timestamps, strips whitespace, drops malformed records
+4. **load_transit_data** — bulk inserts into PostgreSQL with `ON CONFLICT DO NOTHING`, logs run to `pipeline_runs` audit table
+5. **cleanup_old_records** — deletes records older than 30 days to manage storage
+
+**16+ million predictions ingested to date.**
 
 ---
 
-### 5. Local config file
+## Dashboard Features
 
-Create:
+The dashboard connects directly to RDS and queries the last 24 hours of data with a 120-second cache TTL.
 
-```
-gcp/config/config.py
-```
+**Filters:** Route, direction (inbound/outbound), stop, time of day
 
-Contents:
+**KPI Cards:** Total predictions, active vehicles, active alerts, on-time rate
 
-```
-GCP_KEY_PATH = "gcp/config/pos-data-key.json"
-```
+**Live Vehicle Map:**
+- Route lines drawn from decoded polylines
+- Vehicle dots color-coded by MBTA official route colors
+- White stop markers with hover names
+- Zooms to selected stop automatically
 
----
+**Charts:**
+- Predictions by route (horizontal bar)
+- Schedule relationship breakdown (donut)
+- Peak hour activity by arrival time
+- Delay distribution by route (box plot)
+- Predictions over time (area chart)
+- On-time rate by route
+- Direction split by route (stacked bar)
+- Busiest stops top 15
 
-## INPUT DATA
+**Stop Drill-Down:** Next 5 predicted arrivals when a stop is selected
 
-Raw POS files:
-
-```
-data/raw/
-```
-
-Expected filename:
-
-```
-POS_Data(YYYY-MM-DD_YYYY-MM-DD).csv
-```
-
-Reference file:
-
-```
-data/reference/FORANJ.csv
-```
-
-Revlon data:
-
-```
-data/revlonData/revlon_all_columns_clean.csv
-```
+**Auto-refresh:** Page refreshes every 120 seconds
 
 ---
 
-## RUNNING THE PIPELINE
+## Database Schema
 
-```
-python scripts/file_upload.py
-```
+| Table | Description | Key columns |
+|-------|-------------|-------------|
+| `predictions` | Real-time arrival/departure predictions | route, stop_id, arrival_time, schedule_relationship |
+| `vehicles` | Live GPS positions of all trains | latitude, longitude, current_status, bearing |
+| `alerts` | Active service disruptions | effect, cause, severity, affected_routes |
+| `pipeline_runs` | Audit log of every ETL run | status, records_inserted, duration_seconds |
 
-Set run mode inside the script:
-
-```
-RUN_MODE = "prod"
-RUN_MODE = "test"
-```
+All tables include a `fetched_at` timestamp with timezone. Indexed on `route` and `fetched_at`.
 
 ---
 
-## RUNNING STREAMLIT
+## Testing
 
+```bash
+# Run all tests
+make test
+
+# Run with coverage report
+make coverage
+
+# Lint
+make lint
 ```
-streamlit run scripts/app.py
-```
+
+**65 tests across 3 files:**
+
+| File | Tests | Covers |
+|------|-------|--------|
+| `test_mbta_api_client.py` | 20 | API calls, timeouts, 500 errors, rate limiting, empty responses |
+| `test_mbta_data_transformer.py` | 29 | Timestamps, coordinates, strings, edge cases, timezone handling |
+| `test_mbta_data_loader.py` | 15 | DB inserts, connection failures, conflict handling, audit logging |
+
+Coverage threshold enforced at 70% in CI.
 
 ---
 
-## CACHE RESET
+## Quick Start
 
+### Prerequisites
+- Python 3.11+
+- PostgreSQL 15
+- Free MBTA API key from [api-v3.mbta.com](https://api-v3.mbta.com)
+- [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) for Airflow deployment
+
+### Local Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/AnjanaDevan27/Boston-mbta-realtime-dashboard.git
+cd Boston-mbta-realtime-dashboard
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+make setup
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your MBTA API key and database credentials
+
+# Run tests
+make test
+
+# Run pipeline locally (without Airflow)
+python run_pipeline.py
 ```
-rm -rf .cache cache
-rm -f *.duckdb *.duckdb.wal *.duckdb.tmp *.wal *.wal.corrupt
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `MBTA_API_KEY` | Free API key from api-v3.mbta.com |
+| `DB_HOST` | PostgreSQL host (RDS endpoint) |
+| `DB_PORT` | PostgreSQL port (default: 5432) |
+| `DB_NAME` | Database name |
+| `DB_USER` | Database user |
+| `DB_PASSWORD` | Database password |
+| `FETCH_INTERVAL_MINUTES` | Pipeline run interval (default: 2) |
+| `LOG_LEVEL` | Logging level (default: INFO) |
+
+---
+
+## Deployment
+
+### Airflow on Astronomer
+The DAG is deployed to Astronomer using the Astro CLI:
+
+```bash
+astro login cloud.astronomer.io
+astro deploy
 ```
 
----
+Environment variables are configured in Astronomer → Deployment → Environment. The DAG runs on Astro Runtime 3.2-5 (Airflow 3.2.2, Python 3.13).
 
-## TROUBLESHOOTING
+### AWS Infrastructure
+- **RDS:** PostgreSQL 15 on `db.t3.micro` (us-east-2)
+- **EC2:** Ubuntu on `t3.micro` (us-east-2)
 
-- Missing modules: reinstall requirements
-- DuckDB WAL errors: delete .wal files
-- GCS errors: verify IAM permissions
-
----
-
-## NOTES
-
-- GCS is the source of truth
-- DuckDB files are disposable cache
-- master_cleaned_data.csv is optional
+### Streamlit Cloud
+Dashboard deployed at Streamlit Cloud. Secrets configured via Streamlit Cloud Settings → Secrets.
 
 ---
 
-## HANDOFF CHECKLIST
+## Roadmap
 
-- Environment created
-- Dependencies installed
-- GCP configured
-- Pipeline runs
-- App launches
+- [x] Real-time ETL pipeline (Extract, Transform, Load)
+- [x] AWS RDS + EC2 deployment
+- [x] 65 unit tests with GitHub Actions CI/CD
+- [x] Apache Airflow DAG with TaskFlow API
+- [x] Airflow deployed on Astronomer (Astro Runtime 3.2-5)
+- [x] Streamlit dashboard deployed on Streamlit Cloud
+- [ ] Add dbt transform layer
+- [ ] CloudWatch monitoring and alerting
+- [ ] Partition predictions table by date for query performance
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | Python 3.13 |
+| Database | PostgreSQL 15 (AWS RDS) |
+| Cloud | AWS EC2 + RDS (us-east-2) |
+| Orchestration | Apache Airflow 3.2.2 (Astronomer) |
+| Dashboard | Streamlit + Plotly |
+| Deployment | Streamlit Cloud |
+| CI/CD | GitHub Actions |
+| Testing | pytest, pytest-cov |
+| ORM | SQLAlchemy + psycopg2 |
