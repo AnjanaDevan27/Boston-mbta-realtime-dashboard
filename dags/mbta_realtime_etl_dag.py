@@ -142,9 +142,9 @@ def mbta_realtime_etl_dag():
         error_msg = None
 
         try:
-            total_inserted += load_predictions(clean_data["predictions"])
-            total_inserted += load_vehicles(clean_data["vehicles"])
-            total_inserted += load_alerts(clean_data["alerts"])
+            total_inserted += load_predictions(clean_data["predictions"]) or 0
+            total_inserted += load_vehicles(clean_data["vehicles"]) or 0
+            total_inserted += load_alerts(clean_data["alerts"]) or 0
             status = "success"
             logger.info(f"Loaded {total_inserted} total records")
 
