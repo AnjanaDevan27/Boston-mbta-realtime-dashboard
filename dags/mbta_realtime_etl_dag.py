@@ -8,7 +8,7 @@ import logging
 import logging.handlers
 from datetime import datetime, timezone, timedelta
 
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 
 from pipeline.mbta_api_client import fetch_predictions, fetch_vehicles, fetch_alerts
 from pipeline.mbta_data_transformer import (
