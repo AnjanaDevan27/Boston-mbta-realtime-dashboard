@@ -135,13 +135,15 @@ HOUR_LABELS = {
 
 @st.cache_resource
 def get_engine():
-    db_url = (
+    engine = create_engine(
         f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-        f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'postgres')}"
-        f"?sslmode=require"
+        f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'postgres')}",
+        connect_args={
+            "sslmode": "require",
+            "connect_timeout": 10,
+        }
     )
-    return create_engine(db_url)
-
+    return engine
 
 @st.cache_data(ttl=120)
 def load_predictions():
