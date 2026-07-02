@@ -1,16 +1,35 @@
-#import libraries
+"""
+MBTA Real-Time ETL DAG
+Fetches live predictions, vehicles, and alerts from the MBTA V3 API
+every 2 minutes and loads them into PostgreSQL on AWS RDS.
+"""
+
 import logging
 import logging.handlers
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
 from airflow.decorators import dag, task
-from airflow.utils.dates import days_ago
 
 from pipeline.mbta_api_client import fetch_predictions, fetch_vehicles, fetch_alerts
-from pipeline.mbta_data_transformer import transform_predictions, transform_vehicles, transform_alerts
-from pipeline.mbta_db_loader import load_predictions, load_vehicles, load_alerts, log_pipeline_run, init_schema
+from pipeline.mbta_data_transformer import (
+    transform_predictions,
+    transform_vehicles,
+    transform_alerts,
+)
+from pipeline.mbta_db_loader import (
+    load_predictions,
+    load_vehicles,
+    load_alerts,
+    log_pipeline_run,
+    init_schema,
+    delete_old_records,
+)
 from config.mbta_pipeline_config import LOG_LEVEL, LOG_FILE
 
-#logging setup
+
+# ---------------------------------------------------------------------------
+# Logging setup
+# ---------------------------------------------------------------------------
 def setup_logging():
     log_format = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
     formatter = logging.Formatter(log_format, datefmt="%Y-%m-%d %H:%M:%S")
@@ -28,28 +47,42 @@ def setup_logging():
     root.addHandler(console)
     root.addHandler(file_handler)
 
+
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Default args
+# ---------------------------------------------------------------------------
 default_args = {
     "owner": "anjana",
     "retries": 3,
-    "retry_delay": 60,
+    "retry_delay": timedelta(seconds=60),
     "email_on_failure": False,
     "depends_on_past": False,
 }
 
 
-#dag definition
+# ---------------------------------------------------------------------------
+# DAG definition
+# ---------------------------------------------------------------------------
 @dag(
     dag_id="mbta_realtime_etl_dag",
     description="Real-time ETL pipeline fetching live MBTA transit data into PostgreSQL",
     schedule="*/2 * * * *",
-    start_date=days_ago(1),
+    start_date=datetime(2026, 7, 1, tzinfo=timezone.utc),
     catchup=False,
+    max_active_runs=1,
     default_args=default_args,
     tags=["mbta", "realtime", "etl", "transit"],
 )
 def mbta_realtime_etl_dag():
+
+    @task()
+    def initialise_schema():
+        setup_logging()
+        init_schema()
+        logger.info("Schema initialised successfully")
+
     @task()
     def extract_transit_data():
         setup_logging()
@@ -59,7 +92,11 @@ def mbta_realtime_etl_dag():
         vehicles = fetch_vehicles()
         alerts = fetch_alerts()
 
-        logger.info(f"Extracted {len(predictions)} predictions, {len(vehicles)} vehicles, {len(alerts)} alerts")
+        logger.info(
+            f"Extracted {len(predictions)} predictions, "
+            f"{len(vehicles)} vehicles, "
+            f"{len(alerts)} alerts"
+        )
 
         return {
             "predictions": predictions,
@@ -81,6 +118,7 @@ def mbta_realtime_etl_dag():
             f"{len(clean_vehicles)} vehicles, "
             f"{len(clean_alerts)} alerts"
         )
+
         return {
             "predictions": clean_predictions,
             "vehicles": clean_vehicles,
@@ -109,29 +147,30 @@ def mbta_realtime_etl_dag():
 
         finally:
             finished_at = datetime.now(timezone.utc)
-            log_pipeline_run(started_at, finished_at, status, total_inserted, error_msg)
+            log_pipeline_run(
+                started_at, finished_at, status, total_inserted, error_msg
+            )
 
         return total_inserted
 
     @task()
-    def initialise_schema():
-        setup_logging()
-        init_schema()
-        logger.info("Schema initialised successfully")
-        
-    @task()
     def cleanup_old_records():
-        from pipeline.mbta_db_loader import delete_old_records
+        setup_logging()
         deleted = delete_old_records(days=30)
         logger.info(f"Cleanup complete — {deleted} old records removed")
-        
-        
-        
+
+    # -----------------------------------------------------------------------
+    # Task dependencies
+    # schema must be ready before extract runs
+    # cleanup runs after load completes
+    # -----------------------------------------------------------------------
+    schema = initialise_schema()
     raw_data = extract_transit_data()
     clean_data = transform_transit_data(raw_data)
-    load_transit_data(clean_data)
-    initialise_schema()
-    cleanup_old_records()
-    
-    
-mbta_realtime_etl_dag()              # ← this stays at the very bottom
+    loaded = load_transit_data(clean_data)
+
+    schema >> raw_data
+    loaded >> cleanup_old_records()
+
+
+mbta_realtime_etl_dag()
