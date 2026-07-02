@@ -102,33 +102,27 @@ def mbta_realtime_etl_dag():
             "predictions": predictions,
             "vehicles": vehicles,
             "alerts": alerts,
+            "started_at": datetime.now(timezone.utc).isoformat(),
         }
 
     @task()
     def transform_transit_data(raw_data: dict):
         setup_logging()
-        logger.info("Starting MBTA data transformation")
-
         clean_predictions = transform_predictions(raw_data["predictions"])
         clean_vehicles = transform_vehicles(raw_data["vehicles"])
         clean_alerts = transform_alerts(raw_data["alerts"])
-
-        logger.info(
-            f"Transformed {len(clean_predictions)} predictions, "
-            f"{len(clean_vehicles)} vehicles, "
-            f"{len(clean_alerts)} alerts"
-        )
 
         return {
             "predictions": clean_predictions,
             "vehicles": clean_vehicles,
             "alerts": clean_alerts,
+            "started_at": raw_data["started_at"],
         }
 
     @task()
     def load_transit_data(clean_data: dict):
         setup_logging()
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.fromisoformat(clean_data["started_at"])
         total_inserted = 0
         error_msg = None
 
@@ -152,7 +146,6 @@ def mbta_realtime_etl_dag():
             )
 
         return total_inserted
-
     @task()
     def cleanup_old_records():
         setup_logging()
