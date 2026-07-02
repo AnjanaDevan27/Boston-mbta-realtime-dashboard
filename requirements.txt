@@ -10,3 +10,10 @@ python-dotenv==1.0.0
 
 # Data export
 pandas
+
+# Dashboard
+streamlit
+plotly
+
+polyline
+sqlalchemy

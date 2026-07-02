@@ -1,0 +1,592 @@
+{
+  "place-alfcl": {
+    "name": "Alewife",
+    "lat": 42.39583,
+    "lon": -71.141287
+  },
+  "place-davis": {
+    "name": "Davis",
+    "lat": 42.39674,
+    "lon": -71.121815
+  },
+  "place-portr": {
+    "name": "Porter",
+    "lat": 42.3884,
+    "lon": -71.119149
+  },
+  "place-harsq": {
+    "name": "Harvard",
+    "lat": 42.373362,
+    "lon": -71.118956
+  },
+  "place-cntsq": {
+    "name": "Central",
+    "lat": 42.365486,
+    "lon": -71.103802
+  },
+  "place-knncl": {
+    "name": "Kendall/MIT",
+    "lat": 42.3624908,
+    "lon": -71.0861765
+  },
+  "place-chmnl": {
+    "name": "Charles/MGH",
+    "lat": 42.361166,
+    "lon": -71.070628
+  },
+  "place-pktrm": {
+    "name": "Park Street",
+    "lat": 42.3563946,
+    "lon": -71.0624242
+  },
+  "place-dwnxg": {
+    "name": "Downtown Crossing",
+    "lat": 42.355518,
+    "lon": -71.060225
+  },
+  "place-sstat": {
+    "name": "South Station",
+    "lat": 42.352271,
+    "lon": -71.055242
+  },
+  "place-brdwy": {
+    "name": "Broadway",
+    "lat": 42.342622,
+    "lon": -71.056967
+  },
+  "place-andrw": {
+    "name": "Andrew",
+    "lat": 42.330154,
+    "lon": -71.057655
+  },
+  "place-jfk": {
+    "name": "JFK/UMass",
+    "lat": 42.320685,
+    "lon": -71.052391
+  },
+  "place-shmnl": {
+    "name": "Savin Hill",
+    "lat": 42.31129,
+    "lon": -71.053331
+  },
+  "place-fldcr": {
+    "name": "Fields Corner",
+    "lat": 42.300093,
+    "lon": -71.061667
+  },
+  "place-smmnl": {
+    "name": "Shawmut",
+    "lat": 42.2931258,
+    "lon": -71.065738
+  },
+  "place-asmnl": {
+    "name": "Ashmont",
+    "lat": 42.28452,
+    "lon": -71.063777
+  },
+  "place-nqncy": {
+    "name": "North Quincy",
+    "lat": 42.275275,
+    "lon": -71.029583
+  },
+  "place-wlsta": {
+    "name": "Wollaston",
+    "lat": 42.2665139,
+    "lon": -71.0203369
+  },
+  "place-qnctr": {
+    "name": "Quincy Center",
+    "lat": 42.251809,
+    "lon": -71.005409
+  },
+  "place-qamnl": {
+    "name": "Quincy Adams",
+    "lat": 42.233391,
+    "lon": -71.007153
+  },
+  "place-brntn": {
+    "name": "Braintree",
+    "lat": 42.2078543,
+    "lon": -71.0011385
+  },
+  "place-forhl": {
+    "name": "Forest Hills",
+    "lat": 42.300713,
+    "lon": -71.113943
+  },
+  "place-grnst": {
+    "name": "Green Street",
+    "lat": 42.310525,
+    "lon": -71.107414
+  },
+  "place-sbmnl": {
+    "name": "Stony Brook",
+    "lat": 42.317062,
+    "lon": -71.104248
+  },
+  "place-jaksn": {
+    "name": "Jackson Square",
+    "lat": 42.323132,
+    "lon": -71.099592
+  },
+  "place-rcmnl": {
+    "name": "Roxbury Crossing",
+    "lat": 42.331397,
+    "lon": -71.095451
+  },
+  "place-rugg": {
+    "name": "Ruggles",
+    "lat": 42.336377,
+    "lon": -71.088961
+  },
+  "place-masta": {
+    "name": "Massachusetts Avenue",
+    "lat": 42.341512,
+    "lon": -71.083423
+  },
+  "place-bbsta": {
+    "name": "Back Bay",
+    "lat": 42.34735,
+    "lon": -71.075727
+  },
+  "place-tumnl": {
+    "name": "Tufts Medical Center",
+    "lat": 42.349662,
+    "lon": -71.063917
+  },
+  "place-chncl": {
+    "name": "Chinatown",
+    "lat": 42.352547,
+    "lon": -71.062752
+  },
+  "place-state": {
+    "name": "State",
+    "lat": 42.358978,
+    "lon": -71.057598
+  },
+  "place-haecl": {
+    "name": "Haymarket",
+    "lat": 42.363021,
+    "lon": -71.05829
+  },
+  "place-north": {
+    "name": "North Station",
+    "lat": 42.365577,
+    "lon": -71.06129
+  },
+  "place-ccmnl": {
+    "name": "Community College",
+    "lat": 42.373622,
+    "lon": -71.069533
+  },
+  "place-sull": {
+    "name": "Sullivan Square",
+    "lat": 42.383975,
+    "lon": -71.076994
+  },
+  "place-astao": {
+    "name": "Assembly",
+    "lat": 42.392811,
+    "lon": -71.077257
+  },
+  "place-welln": {
+    "name": "Wellington",
+    "lat": 42.40237,
+    "lon": -71.077082
+  },
+  "place-mlmnl": {
+    "name": "Malden Center",
+    "lat": 42.426632,
+    "lon": -71.07411
+  },
+  "place-ogmnl": {
+    "name": "Oak Grove",
+    "lat": 42.43668,
+    "lon": -71.071097
+  },
+  "place-bomnl": {
+    "name": "Bowdoin",
+    "lat": 42.361365,
+    "lon": -71.062037
+  },
+  "place-gover": {
+    "name": "Government Center",
+    "lat": 42.359705,
+    "lon": -71.059215
+  },
+  "place-aqucl": {
+    "name": "Aquarium",
+    "lat": 42.359784,
+    "lon": -71.051652
+  },
+  "place-mvbcl": {
+    "name": "Maverick",
+    "lat": 42.3691186,
+    "lon": -71.0395296
+  },
+  "place-aport": {
+    "name": "Airport",
+    "lat": 42.374262,
+    "lon": -71.030395
+  },
+  "place-wimnl": {
+    "name": "Wood Island",
+    "lat": 42.3796403,
+    "lon": -71.0228654
+  },
+  "place-orhte": {
+    "name": "Orient Heights",
+    "lat": 42.386867,
+    "lon": -71.004736
+  },
+  "place-sdmnl": {
+    "name": "Suffolk Downs",
+    "lat": 42.3905007,
+    "lon": -70.9971226
+  },
+  "place-bmmnl": {
+    "name": "Beachmont",
+    "lat": 42.3975423,
+    "lon": -70.9923194
+  },
+  "place-rbmnl": {
+    "name": "Revere Beach",
+    "lat": 42.4078425,
+    "lon": -70.9925332
+  },
+  "place-wondl": {
+    "name": "Wonderland",
+    "lat": 42.41342,
+    "lon": -70.991648
+  },
+  "place-boyls": {
+    "name": "Boylston",
+    "lat": 42.35302,
+    "lon": -71.06459
+  },
+  "place-armnl": {
+    "name": "Arlington",
+    "lat": 42.351902,
+    "lon": -71.070893
+  },
+  "place-coecl": {
+    "name": "Copley",
+    "lat": 42.349974,
+    "lon": -71.077447
+  },
+  "place-hymnl": {
+    "name": "Hynes Convention Center",
+    "lat": 42.347888,
+    "lon": -71.087903
+  },
+  "place-kencl": {
+    "name": "Kenmore",
+    "lat": 42.348949,
+    "lon": -71.095169
+  },
+  "place-bland": {
+    "name": "Blandford Street",
+    "lat": 42.349293,
+    "lon": -71.100258
+  },
+  "place-buest": {
+    "name": "Boston University East",
+    "lat": 42.349735,
+    "lon": -71.103889
+  },
+  "place-bucen": {
+    "name": "Boston University Central",
+    "lat": 42.350082,
+    "lon": -71.106865
+  },
+  "place-amory": {
+    "name": "Amory Street",
+    "lat": 42.350992,
+    "lon": -71.114748
+  },
+  "place-babck": {
+    "name": "Babcock Street",
+    "lat": 42.351616,
+    "lon": -71.119924
+  },
+  "place-brico": {
+    "name": "Packard's Corner",
+    "lat": 42.351967,
+    "lon": -71.125031
+  },
+  "place-harvd": {
+    "name": "Harvard Avenue",
+    "lat": 42.350243,
+    "lon": -71.131355
+  },
+  "place-grigg": {
+    "name": "Griggs Street",
+    "lat": 42.348545,
+    "lon": -71.134949
+  },
+  "place-alsgr": {
+    "name": "Allston Street",
+    "lat": 42.348701,
+    "lon": -71.137955
+  },
+  "place-wrnst": {
+    "name": "Warren Street",
+    "lat": 42.348343,
+    "lon": -71.140457
+  },
+  "place-wascm": {
+    "name": "Washington Street",
+    "lat": 42.343864,
+    "lon": -71.142853
+  },
+  "place-sthld": {
+    "name": "Sutherland Road",
+    "lat": 42.341614,
+    "lon": -71.146202
+  },
+  "place-chswk": {
+    "name": "Chiswick Road",
+    "lat": 42.340805,
+    "lon": -71.150711
+  },
+  "place-chill": {
+    "name": "Chestnut Hill Avenue",
+    "lat": 42.338169,
+    "lon": -71.15316
+  },
+  "place-sougr": {
+    "name": "South Street",
+    "lat": 42.3396,
+    "lon": -71.157661
+  },
+  "place-lake": {
+    "name": "Boston College",
+    "lat": 42.340081,
+    "lon": -71.166769
+  },
+  "place-clmnl": {
+    "name": "Cleveland Circle",
+    "lat": 42.336142,
+    "lon": -71.149326
+  },
+  "place-engav": {
+    "name": "Englewood Avenue",
+    "lat": 42.336971,
+    "lon": -71.14566
+  },
+  "place-denrd": {
+    "name": "Dean Road",
+    "lat": 42.337807,
+    "lon": -71.141853
+  },
+  "place-tapst": {
+    "name": "Tappan Street",
+    "lat": 42.338459,
+    "lon": -71.138702
+  },
+  "place-bcnwa": {
+    "name": "Washington Square",
+    "lat": 42.339394,
+    "lon": -71.13533
+  },
+  "place-fbkst": {
+    "name": "Fairbanks Street",
+    "lat": 42.339725,
+    "lon": -71.131073
+  },
+  "place-bndhl": {
+    "name": "Brandon Hall",
+    "lat": 42.340023,
+    "lon": -71.129082
+  },
+  "place-sumav": {
+    "name": "Summit Avenue",
+    "lat": 42.34111,
+    "lon": -71.12561
+  },
+  "place-cool": {
+    "name": "Coolidge Corner",
+    "lat": 42.342116,
+    "lon": -71.121263
+  },
+  "place-stpul": {
+    "name": "Saint Paul Street",
+    "lat": 42.343327,
+    "lon": -71.116997
+  },
+  "place-kntst": {
+    "name": "Kent Street",
+    "lat": 42.344074,
+    "lon": -71.114197
+  },
+  "place-hwsst": {
+    "name": "Hawes Street",
+    "lat": 42.344906,
+    "lon": -71.111145
+  },
+  "place-smary": {
+    "name": "Saint Mary's Street",
+    "lat": 42.345974,
+    "lon": -71.107353
+  },
+  "place-river": {
+    "name": "Riverside",
+    "lat": 42.337352,
+    "lon": -71.252685
+  },
+  "place-woodl": {
+    "name": "Woodland",
+    "lat": 42.332902,
+    "lon": -71.243362
+  },
+  "place-waban": {
+    "name": "Waban",
+    "lat": 42.325845,
+    "lon": -71.230609
+  },
+  "place-eliot": {
+    "name": "Eliot",
+    "lat": 42.319045,
+    "lon": -71.216684
+  },
+  "place-newtn": {
+    "name": "Newton Highlands",
+    "lat": 42.322381,
+    "lon": -71.205509
+  },
+  "place-newto": {
+    "name": "Newton Centre",
+    "lat": 42.329443,
+    "lon": -71.192414
+  },
+  "place-chhil": {
+    "name": "Chestnut Hill",
+    "lat": 42.326753,
+    "lon": -71.164699
+  },
+  "place-rsmnl": {
+    "name": "Reservoir",
+    "lat": 42.335088,
+    "lon": -71.148758
+  },
+  "place-bcnfd": {
+    "name": "Beaconsfield",
+    "lat": 42.335765,
+    "lon": -71.140455
+  },
+  "place-brkhl": {
+    "name": "Brookline Hills",
+    "lat": 42.331316,
+    "lon": -71.126683
+  },
+  "place-bvmnl": {
+    "name": "Brookline Village",
+    "lat": 42.332608,
+    "lon": -71.116857
+  },
+  "place-longw": {
+    "name": "Longwood",
+    "lat": 42.341702,
+    "lon": -71.109956
+  },
+  "place-fenwy": {
+    "name": "Fenway",
+    "lat": 42.345403,
+    "lon": -71.104213
+  },
+  "place-spmnl": {
+    "name": "Science Park/West End",
+    "lat": 42.366664,
+    "lon": -71.067666
+  },
+  "place-lech": {
+    "name": "Lechmere",
+    "lat": 42.371572,
+    "lon": -71.076584
+  },
+  "place-unsqu": {
+    "name": "Union Square",
+    "lat": 42.377359,
+    "lon": -71.094761
+  },
+  "place-hsmnl": {
+    "name": "Heath Street",
+    "lat": 42.328316,
+    "lon": -71.110252
+  },
+  "place-bckhl": {
+    "name": "Back of the Hill",
+    "lat": 42.330139,
+    "lon": -71.111313
+  },
+  "place-rvrwy": {
+    "name": "Riverway",
+    "lat": 42.331684,
+    "lon": -71.111931
+  },
+  "place-mispk": {
+    "name": "Mission Park",
+    "lat": 42.333195,
+    "lon": -71.109756
+  },
+  "place-fenwd": {
+    "name": "Fenwood Road",
+    "lat": 42.333706,
+    "lon": -71.105728
+  },
+  "place-brmnl": {
+    "name": "Brigham Circle",
+    "lat": 42.334229,
+    "lon": -71.104609
+  },
+  "place-lngmd": {
+    "name": "Longwood Medical Area",
+    "lat": 42.33596,
+    "lon": -71.100052
+  },
+  "place-mfa": {
+    "name": "Museum of Fine Arts",
+    "lat": 42.337711,
+    "lon": -71.095512
+  },
+  "place-nuniv": {
+    "name": "Northeastern University",
+    "lat": 42.340401,
+    "lon": -71.088806
+  },
+  "place-symcl": {
+    "name": "Symphony",
+    "lat": 42.342687,
+    "lon": -71.085056
+  },
+  "place-prmnl": {
+    "name": "Prudential",
+    "lat": 42.34557,
+    "lon": -71.081696
+  },
+  "place-esomr": {
+    "name": "East Somerville",
+    "lat": 42.379467,
+    "lon": -71.086625
+  },
+  "place-gilmn": {
+    "name": "Gilman Square",
+    "lat": 42.387928,
+    "lon": -71.096766
+  },
+  "place-mgngl": {
+    "name": "Magoun Square",
+    "lat": 42.393682,
+    "lon": -71.1063879
+  },
+  "place-balsq": {
+    "name": "Ball Square",
+    "lat": 42.399889,
+    "lon": -71.111003
+  },
+  "place-mdftf": {
+    "name": "Medford/Tufts",
+    "lat": 42.407975,
+    "lon": -71.117044
+  }
+}
