@@ -1,4 +1,4 @@
-#import libraries
+# import libraries
 import pytest
 from datetime import datetime
 from pipeline.mbta_data_transformer import (
@@ -8,14 +8,15 @@ from pipeline.mbta_data_transformer import (
 )
 
 
-#prediction tests
+# prediction tests
 class TestTransformPredictions:
 
     def test_parses_valid_timestamps(self, valid_prediction):
         result = transform_predictions([valid_prediction])
-        assert isinstance(result[0]["arrival_time"], datetime)
-        assert isinstance(result[0]["departure_time"], datetime)
-        assert isinstance(result[0]["fetched_at"], datetime)
+        # timestamps are now ISO strings for XCom compatibility
+        assert isinstance(result[0]["arrival_time"], str)
+        assert isinstance(result[0]["departure_time"], str)
+        assert isinstance(result[0]["fetched_at"], str)
 
     def test_handles_null_timestamps(self, prediction_missing_stop):
         result = transform_predictions([prediction_missing_stop])
@@ -70,15 +71,16 @@ class TestTransformPredictions:
 
     def test_fetched_at_is_timezone_aware(self, valid_prediction):
         result = transform_predictions([valid_prediction])
-        assert result[0]["fetched_at"].tzinfo is not None
+        # fetched_at is an ISO string — parse and verify timezone info
+        fetched_at = datetime.fromisoformat(result[0]["fetched_at"])
+        assert fetched_at.tzinfo is not None
 
     def test_handles_multiple_records(self, valid_prediction, prediction_missing_stop):
         result = transform_predictions([valid_prediction, prediction_missing_stop])
         assert len(result) == 2
-    
-    
-    
-#vehicle tests  
+
+
+# vehicle tests
 class TestTransformVehicles:
 
     def test_accepts_valid_coordinates(self, valid_vehicle):
@@ -126,7 +128,9 @@ class TestTransformVehicles:
 
     def test_fetched_at_is_timezone_aware(self, valid_vehicle):
         result = transform_vehicles([valid_vehicle])
-        assert result[0]["fetched_at"].tzinfo is not None
+        # fetched_at is an ISO string — parse and verify timezone info
+        fetched_at = datetime.fromisoformat(result[0]["fetched_at"])
+        assert fetched_at.tzinfo is not None
 
     def test_handles_multiple_records(self, valid_vehicle, vehicle_invalid_latitude):
         result = transform_vehicles([valid_vehicle, vehicle_invalid_latitude])
@@ -137,15 +141,15 @@ class TestTransformVehicles:
     def test_preserves_vehicle_id(self, valid_vehicle):
         result = transform_vehicles([valid_vehicle])
         assert result[0]["vehicle_id"] == "vehicle-1234"
-    
-    
-    
-#alert tests
+
+
+# alert tests
 class TestTransformAlerts:
 
     def test_parses_valid_timestamps(self, valid_alert):
         result = transform_alerts([valid_alert])
-        assert isinstance(result[0]["active_period_start"], datetime)
+        # timestamps are now ISO strings for XCom compatibility
+        assert isinstance(result[0]["active_period_start"], str)
         assert result[0]["active_period_end"] is None
 
     def test_strips_whitespace(self, alert_whitespace_fields):
@@ -190,7 +194,9 @@ class TestTransformAlerts:
 
     def test_fetched_at_is_timezone_aware(self, valid_alert):
         result = transform_alerts([valid_alert])
-        assert result[0]["fetched_at"].tzinfo is not None
+        # fetched_at is an ISO string — parse and verify timezone info
+        fetched_at = datetime.fromisoformat(result[0]["fetched_at"])
+        assert fetched_at.tzinfo is not None
 
     def test_handles_multiple_records(self, valid_alert, alert_missing_header):
         result = transform_alerts([valid_alert, alert_missing_header])

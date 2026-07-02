@@ -1,4 +1,4 @@
-#import libraries
+# import libraries
 import logging
 import psycopg2
 import psycopg2.extras
@@ -8,7 +8,8 @@ from config.mbta_pipeline_config import DB_CONFIG
 
 logger = logging.getLogger(__name__)
 
-#dB connection
+
+# DB connection
 @contextmanager
 def get_connection():
     conn = psycopg2.connect(**DB_CONFIG)
@@ -20,20 +21,43 @@ def get_connection():
         raise
     finally:
         conn.close()
-        
- 
-#bulk insert helper
+
+
+def _convert_timestamps(records):
+    """Convert ISO string timestamps back to datetime objects for DB insert."""
+    timestamp_fields = [
+        "fetched_at", "arrival_time", "departure_time",
+        "active_period_start", "active_period_end",
+    ]
+    for r in records:
+        for field in timestamp_fields:
+            if field in r and isinstance(r[field], str):
+                try:
+                    r[field] = datetime.fromisoformat(r[field])
+                except (ValueError, TypeError):
+                    r[field] = None
+    return records
+
+
+# bulk insert helper
 def _bulk_insert(conn, table, records):
     if not records:
         return 0
-    # Convert ISO string fetched_at back to datetime for DB insert
-    for r in records:
-        if "fetched_at" in r and isinstance(r["fetched_at"], str):
-            r["fetched_at"] = datetime.fromisoformat(r["fetched_at"])
+    records = _convert_timestamps(records)
     columns = list(records[0].keys())
-    ...
+    sql = f"""
+        INSERT INTO {table} ({', '.join(columns)})
+        VALUES %s
+    """
+    psycopg2.extras.execute_values(
+        conn.cursor(),
+        sql,
+        [tuple(r[c] for c in columns) for r in records]
+    )
+    return len(records)
 
-#public load functions
+
+# public load functions
 def load_predictions(records):
     with get_connection() as conn:
         count = _bulk_insert(conn, "predictions", records)
@@ -51,6 +75,7 @@ def load_vehicles(records):
 def load_alerts(records):
     if not records:
         return 0
+    records = _convert_timestamps(records)
     columns = list(records[0].keys())
     sql = f"""
         INSERT INTO alerts ({', '.join(columns)})
@@ -67,10 +92,10 @@ def load_alerts(records):
     return len(records)
 
 
-# pipeline run logger and schema init
+# pipeline run logger
 def log_pipeline_run(started_at, finished_at, status, records_inserted, error=None):
     sql = """
-        INSERT INTO pipeline_runs 
+        INSERT INTO pipeline_runs
         (started_at, finished_at, status, records_inserted, error_message)
         VALUES (%s, %s, %s, %s, %s)
     """
@@ -79,6 +104,7 @@ def log_pipeline_run(started_at, finished_at, status, records_inserted, error=No
             cur.execute(sql, (started_at, finished_at, status, records_inserted, error))
 
 
+# schema init
 def init_schema():
     with open("include/sql/mbta_schema.sql", "r") as f:
         sql = f.read()
@@ -86,15 +112,15 @@ def init_schema():
         with conn.cursor() as cur:
             cur.execute(sql)
     logger.info("Schema initialized successfully")
-    
-    
-    
+
+
+# cleanup old records
 def delete_old_records(days: int = 30) -> int:
     """Delete records older than specified days to manage storage."""
     sql_predictions = "DELETE FROM predictions WHERE fetched_at < NOW() - INTERVAL '%s days'"
     sql_vehicles = "DELETE FROM vehicles WHERE fetched_at < NOW() - INTERVAL '%s days'"
     sql_alerts = "DELETE FROM alerts WHERE fetched_at < NOW() - INTERVAL '%s days'"
-    
+
     total_deleted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -104,6 +130,6 @@ def delete_old_records(days: int = 30) -> int:
             total_deleted += cur.rowcount
             cur.execute(sql_alerts, (days,))
             total_deleted += cur.rowcount
-    
+
     logger.info(f"Deleted {total_deleted} records older than {days} days")
     return total_deleted
