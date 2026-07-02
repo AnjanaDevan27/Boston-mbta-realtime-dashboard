@@ -7,6 +7,8 @@ every 2 minutes and loads them into PostgreSQL on AWS RDS.
 import logging
 import logging.handlers
 from datetime import datetime, timezone, timedelta
+import pytz
+UTC = pytz.UTC
 
 from airflow.sdk import dag, task
 
@@ -69,7 +71,7 @@ default_args = {
     dag_id="mbta_realtime_etl_dag",
     description="Real-time ETL pipeline fetching live MBTA transit data into PostgreSQL",
     schedule="*/2 * * * *",
-    start_date=datetime(2026, 7, 1, tzinfo=timezone.utc),
+    start_date=datetime(2026, 7, 1, tzinfo=UTC),
     catchup=False,
     max_active_runs=1,
     default_args=default_args,
@@ -102,7 +104,7 @@ def mbta_realtime_etl_dag():
             "predictions": predictions,
             "vehicles": vehicles,
             "alerts": alerts,
-            "started_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(UTC).isoformat(),
         }
 
     @task()
@@ -140,7 +142,7 @@ def mbta_realtime_etl_dag():
             raise
 
         finally:
-            finished_at = datetime.now(timezone.utc)
+            finished_at = datetime.now(UTC)
             log_pipeline_run(
                 started_at, finished_at, status, total_inserted, error_msg
             )
