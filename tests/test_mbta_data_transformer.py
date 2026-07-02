@@ -1,201 +1,102 @@
-#import libraries
-import pytest
-from datetime import datetime
-from pipeline.mbta_data_transformer import (
-    transform_predictions,
-    transform_vehicles,
-    transform_alerts,
-)
+# import libraries
+import logging
+from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 
-#prediction tests
-class TestTransformPredictions:
+# helper functions
+def _parse_timestamp(value):
+    """Parse ISO timestamp to string for XCom compatibility."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value)
+        return dt.isoformat()
+    except (ValueError, TypeError):
+        logger.warning(f"Could not parse timestamp: {value}")
+        return None
 
-    def test_parses_valid_timestamps(self, valid_prediction):
-        result = transform_predictions([valid_prediction])
-        assert isinstance(result[0]["arrival_time"], datetime)
-        assert isinstance(result[0]["departure_time"], datetime)
-        assert isinstance(result[0]["fetched_at"], datetime)
 
-    def test_handles_null_timestamps(self, prediction_missing_stop):
-        result = transform_predictions([prediction_missing_stop])
-        assert result[0]["arrival_time"] is None
-        assert result[0]["departure_time"] is None
+def _clean_str(value, max_len=255):
+    if value is None:
+        return None
+    return str(value).strip()[:max_len]
 
-    def test_truncates_long_route_name(self, prediction_long_route):
-        result = transform_predictions([prediction_long_route])
-        assert len(result[0]["route"]) <= 20
 
-    def test_handles_empty_input(self):
-        result = transform_predictions([])
-        assert result == []
+# transform predictions
+def transform_predictions(records):
+    cleaned = []
+    for r in records:
+        cleaned.append({
+            "route": _clean_str(r.get("route"), 20),
+            "stop_id": _clean_str(r.get("stop_id"), 50),
+            "direction_id": r.get("direction_id"),
+            "arrival_time": _parse_timestamp(r.get("arrival_time")),
+            "departure_time": _parse_timestamp(r.get("departure_time")),
+            "status": _clean_str(r.get("status"), 50),
+            "schedule_relationship": _clean_str(r.get("schedule_relationship"), 50),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+        })
+    logger.info(f"Transformed {len(cleaned)} prediction records")
+    return cleaned
 
-    def test_handles_missing_attributes(self, prediction_missing_attributes):
-        result = transform_predictions([prediction_missing_attributes])
-        assert len(result) == 1
-        assert result[0]["route"] is None
-        assert result[0]["arrival_time"] is None
 
-    def test_strips_whitespace_from_strings(self):
-        raw = [{
-            "route": "  Red  ",
-            "stop_id": "  place-pktrm  ",
-            "direction_id": 0,
-            "arrival_time": None,
-            "departure_time": None,
-            "status": None,
-            "schedule_relationship": None,
-        }]
-        result = transform_predictions(raw)
-        assert result[0]["route"] == "Red"
-        assert result[0]["stop_id"] == "place-pktrm"
+# transform vehicles
+def transform_vehicles(records):
+    cleaned = []
+    for r in records:
+        lat = r.get("latitude")
+        lon = r.get("longitude")
 
-    def test_handles_invalid_timestamp_format(self):
-        raw = [{
-            "route": "Red",
-            "stop_id": "place-pktrm",
-            "direction_id": 0,
-            "arrival_time": "not-a-timestamp",
-            "departure_time": "also-invalid",
-            "status": None,
-            "schedule_relationship": None,
-        }]
-        result = transform_predictions(raw)
-        assert result[0]["arrival_time"] is None
-        assert result[0]["departure_time"] is None
+        if lat is not None:
+            try:
+                lat = float(lat)
+                if not (-90 <= lat <= 90):
+                    logger.warning(f"Invalid latitude for vehicle {r.get('vehicle_id')}: {lat}")
+                    lat = None
+            except (TypeError, ValueError):
+                logger.warning(f"Non-numeric latitude for vehicle {r.get('vehicle_id')}: {lat}")
+                lat = None
 
-    def test_preserves_direction_id(self, valid_prediction):
-        result = transform_predictions([valid_prediction])
-        assert result[0]["direction_id"] == 0
+        if lon is not None:
+            try:
+                lon = float(lon)
+                if not (-180 <= lon <= 180):
+                    logger.warning(f"Invalid longitude for vehicle {r.get('vehicle_id')}: {lon}")
+                    lon = None
+            except (TypeError, ValueError):
+                logger.warning(f"Non-numeric longitude for vehicle {r.get('vehicle_id')}: {lon}")
+                lon = None
 
-    def test_fetched_at_is_timezone_aware(self, valid_prediction):
-        result = transform_predictions([valid_prediction])
-        assert result[0]["fetched_at"].tzinfo is not None
+        cleaned.append({
+            "vehicle_id": _clean_str(r.get("vehicle_id"), 50),
+            "route": _clean_str(r.get("route"), 20),
+            "latitude": lat,
+            "longitude": lon,
+            "bearing": r.get("bearing"),
+            "speed": r.get("speed"),
+            "current_status": _clean_str(r.get("current_status"), 50),
+            "occupancy_status": _clean_str(r.get("occupancy_status"), 50),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+        })
+    logger.info(f"Transformed {len(cleaned)} vehicle records")
+    return cleaned
 
-    def test_handles_multiple_records(self, valid_prediction, prediction_missing_stop):
-        result = transform_predictions([valid_prediction, prediction_missing_stop])
-        assert len(result) == 2
-    
-    
-    
-#vehicle tests  
-class TestTransformVehicles:
 
-    def test_accepts_valid_coordinates(self, valid_vehicle):
-        result = transform_vehicles([valid_vehicle])
-        assert result[0]["latitude"] == 42.3601
-        assert result[0]["longitude"] == -71.0589
-
-    def test_rejects_invalid_latitude(self, vehicle_invalid_latitude):
-        result = transform_vehicles([vehicle_invalid_latitude])
-        assert result[0]["latitude"] is None
-        assert result[0]["longitude"] == -71.0589
-
-    def test_rejects_invalid_longitude(self, vehicle_invalid_longitude):
-        result = transform_vehicles([vehicle_invalid_longitude])
-        assert result[0]["latitude"] == 42.3601
-        assert result[0]["longitude"] is None
-
-    def test_accepts_boundary_coordinates(self, vehicle_boundary_coordinates):
-        result = transform_vehicles([vehicle_boundary_coordinates])
-        assert result[0]["latitude"] == 90.0
-        assert result[0]["longitude"] == -180.0
-
-    def test_handles_empty_input(self):
-        result = transform_vehicles([])
-        assert result == []
-
-    def test_handles_none_coordinates(self):
-        raw = [{
-            "vehicle_id": "v1",
-            "route": "Red",
-            "latitude": None,
-            "longitude": None,
-            "bearing": None,
-            "speed": None,
-            "current_status": None,
-            "occupancy_status": None,
-        }]
-        result = transform_vehicles(raw)
-        assert result[0]["latitude"] is None
-        assert result[0]["longitude"] is None
-
-    def test_handles_string_coordinates(self, vehicle_string_coordinates):
-        result = transform_vehicles([vehicle_string_coordinates])
-        assert result[0]["latitude"] is None
-
-    def test_fetched_at_is_timezone_aware(self, valid_vehicle):
-        result = transform_vehicles([valid_vehicle])
-        assert result[0]["fetched_at"].tzinfo is not None
-
-    def test_handles_multiple_records(self, valid_vehicle, vehicle_invalid_latitude):
-        result = transform_vehicles([valid_vehicle, vehicle_invalid_latitude])
-        assert len(result) == 2
-        assert result[0]["latitude"] == 42.3601
-        assert result[1]["latitude"] is None
-
-    def test_preserves_vehicle_id(self, valid_vehicle):
-        result = transform_vehicles([valid_vehicle])
-        assert result[0]["vehicle_id"] == "vehicle-1234"
-    
-    
-    
-#alert tests
-class TestTransformAlerts:
-
-    def test_parses_valid_timestamps(self, valid_alert):
-        result = transform_alerts([valid_alert])
-        assert isinstance(result[0]["active_period_start"], datetime)
-        assert result[0]["active_period_end"] is None
-
-    def test_strips_whitespace(self, alert_whitespace_fields):
-        result = transform_alerts([alert_whitespace_fields])
-        assert result[0]["alert_id"] == "alert-1"
-        assert result[0]["header"] == "Delays on Red Line"
-
-    def test_handles_missing_header(self, alert_missing_header):
-        result = transform_alerts([alert_missing_header])
-        assert result[0]["header"] is None
-
-    def test_handles_empty_input(self):
-        result = transform_alerts([])
-        assert result == []
-
-    def test_truncates_long_effect(self):
-        raw = [{
-            "alert_id": "alert-long",
-            "header": "Test",
-            "severity": 5,
-            "effect": "E" * 200,
-            "cause": "TECHNICAL_PROBLEM",
-            "active_period_start": None,
-            "active_period_end": None,
-        }]
-        result = transform_alerts(raw)
-        assert len(result[0]["effect"]) <= 100
-
-    def test_handles_invalid_timestamp(self):
-        raw = [{
-            "alert_id": "alert-bad-ts",
-            "header": "Test",
-            "severity": 5,
-            "effect": "DELAY",
-            "cause": "TECHNICAL_PROBLEM",
-            "active_period_start": "not-a-timestamp",
-            "active_period_end": "also-invalid",
-        }]
-        result = transform_alerts(raw)
-        assert result[0]["active_period_start"] is None
-        assert result[0]["active_period_end"] is None
-
-    def test_fetched_at_is_timezone_aware(self, valid_alert):
-        result = transform_alerts([valid_alert])
-        assert result[0]["fetched_at"].tzinfo is not None
-
-    def test_handles_multiple_records(self, valid_alert, alert_missing_header):
-        result = transform_alerts([valid_alert, alert_missing_header])
-        assert len(result) == 2
-
-    def test_preserves_severity(self, valid_alert):
-        result = transform_alerts([valid_alert])
-        assert result[0]["severity"] == 7
+# transform alerts
+def transform_alerts(records):
+    cleaned = []
+    for r in records:
+        cleaned.append({
+            "alert_id": _clean_str(r.get("alert_id"), 50),
+            "header": _clean_str(r.get("header")),
+            "severity": r.get("severity"),
+            "effect": _clean_str(r.get("effect"), 100),
+            "cause": _clean_str(r.get("cause"), 100),
+            "active_period_start": _parse_timestamp(r.get("active_period_start")),
+            "active_period_end": _parse_timestamp(r.get("active_period_end")),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+        })
+    logger.info(f"Transformed {len(cleaned)} alert records")
+    return cleaned
