@@ -33,7 +33,7 @@ def transform_predictions(records):
             "departure_time": _parse_timestamp(r.get("departure_time")),
             "status": _clean_str(r.get("status"),50),
             "schedule_relationship": _clean_str(r.get("schedule_relationship"),50),
-            "fetched_at": datetime.now(timezone.utc),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
         })
     logger.info(f"Transformed {len(cleaned)} prediction records")
     return cleaned
@@ -74,7 +74,7 @@ def transform_vehicles(records):
             "speed": r.get("speed"),
             "current_status": _clean_str(r.get("current_status"),50),
             "occupancy_status": _clean_str(r.get("occupancy_status"),50),
-            "fetched_at": datetime.now(timezone.utc),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
             
         })
     logger.info(f"Transformed {len(cleaned)} vehicle records")
@@ -93,7 +93,7 @@ def transform_alerts(records):
             "Cause": _clean_str(r.get("cause"),100),
             "active_period_start": _parse_timestamp(r.get("active_period_start")),
             "active_period_end": _parse_timestamp(r.get("active_period_end")),
-            "fetched_at": datetime.now(timezone.utc),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
         })
     logger.info(f"Transformed {len(cleaned)} alert records")
     return cleaned  

@@ -3,6 +3,7 @@ import logging
 import psycopg2
 import psycopg2.extras
 from contextlib import contextmanager
+from datetime import datetime
 from config.mbta_pipeline_config import DB_CONFIG
 
 logger = logging.getLogger(__name__)
@@ -20,23 +21,17 @@ def get_connection():
     finally:
         conn.close()
         
-
+ 
 #bulk insert helper
 def _bulk_insert(conn, table, records):
     if not records:
         return 0
+    # Convert ISO string fetched_at back to datetime for DB insert
+    for r in records:
+        if "fetched_at" in r and isinstance(r["fetched_at"], str):
+            r["fetched_at"] = datetime.fromisoformat(r["fetched_at"])
     columns = list(records[0].keys())
-    sql = f"""
-        INSERT INTO {table} ({', '.join(columns)})
-        VALUES %s
-    """
-    psycopg2.extras.execute_values(
-        conn.cursor(),
-        sql,
-        [tuple(r[c] for c in columns) for r in records]
-    )
-    return len(records)
-
+    ...
 
 #public load functions
 def load_predictions(records):
