@@ -11,9 +11,9 @@ load_dotenv()
 
 # Use Streamlit secrets in production, .env locally
 try:
-    if "DB_HOST" in st.secrets:
+    if hasattr(st, "secrets") and "DB_HOST" in st.secrets:
         os.environ["DB_HOST"] = st.secrets["DB_HOST"]
-        os.environ["DB_PORT"] = st.secrets["DB_PORT"]
+        os.environ["DB_PORT"] = str(st.secrets["DB_PORT"])
         os.environ["DB_NAME"] = st.secrets["DB_NAME"]
         os.environ["DB_USER"] = st.secrets["DB_USER"]
         os.environ["DB_PASSWORD"] = st.secrets["DB_PASSWORD"]
@@ -59,7 +59,6 @@ st.markdown("""
     * { font-family: 'Inter', sans-serif !important; }
     .stApp { background-color: #0F1923; color: #FFFFFF; }
     button[data-testid="collapsedControl"] { display: none; }
-
     div[data-testid="metric-container"] {
         background-color: #1A2940;
         border: 1px solid #2A4060;
@@ -76,13 +75,11 @@ st.markdown("""
     }
     div[data-testid="stMetricValue"] { color: #FFFFFF !important; font-size: 1.6rem !important; font-weight: 700 !important; }
     div[data-testid="stMetricDelta"] { color: #C8A951 !important; font-size: 0.72rem !important; }
-
     h1 { color: #FFFFFF !important; font-size: 1.3rem !important; font-weight: 700 !important; letter-spacing: -0.01em !important; margin: 0 !important; }
     h2, h3 { color: #7A9BBF !important; font-size: 0.65rem !important; font-weight: 600 !important; letter-spacing: 0.14em !important; text-transform: uppercase !important; margin-bottom: 10px !important; }
     p { color: #7A9BBF !important; font-size: 0.8rem !important; }
     hr { border-color: #2A4060 !important; margin: 16px 0 !important; }
     .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
-
     span[data-baseweb="tag"] { background-color: #C8A951 !important; color: #0F1923 !important; font-weight: 600 !important; font-size: 11px !important; }
     div[data-baseweb="select"] { background-color: #1A2940 !important; border-color: #2A4060 !important; }
     div[data-baseweb="select"] * { color: #FFFFFF !important; }
@@ -91,12 +88,9 @@ st.markdown("""
     div[data-testid="stSlider"] label { color: #7A9BBF !important; font-size: 0.7rem !important; font-weight: 600 !important; letter-spacing: 0.1em !important; text-transform: uppercase !important; }
     div[data-testid="stSlider"] p { color: #FFFFFF !important; }
     div[data-testid="stMultiSelect"] label { color: #7A9BBF !important; font-size: 0.7rem !important; font-weight: 600 !important; letter-spacing: 0.1em !important; text-transform: uppercase !important; }
-
     .stButton button { background-color: transparent !important; color: #C8A951 !important; border: 1px solid #C8A951 !important; border-radius: 4px !important; font-size: 0.75rem !important; font-weight: 600 !important; padding: 4px 12px !important; }
     .stButton button:hover { background-color: #C8A951 !important; color: #0F1923 !important; }
     .stDataFrame { border: 1px solid #2A4060 !important; border-radius: 6px !important; }
-
-    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
         h1 { font-size: 1rem !important; }
         h2, h3 { font-size: 0.6rem !important; }
@@ -105,7 +99,6 @@ st.markdown("""
         .block-container { padding: 0.5rem !important; }
         div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
         div[data-testid="stHorizontalBlock"] > div { min-width: 100% !important; flex: 1 1 100% !important; }
-        div[data-baseweb="select"] { font-size: 12px !important; }
         span[data-baseweb="tag"] { font-size: 10px !important; }
     }
     @media (max-width: 1024px) {
@@ -145,7 +138,7 @@ HOUR_LABELS = {
 def get_engine():
     db_url = (
         f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-        f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+        f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'postgres')}"
     )
     return create_engine(db_url)
 
@@ -188,10 +181,10 @@ alerts = load_alerts()
 
 # Parse timestamps
 predictions["fetched_at"] = pd.to_datetime(predictions["fetched_at"], utc=True)
-predictions["hour"] = predictions["arrival_time"].dt.hour
-predictions["fetched_hour"] = predictions["fetched_at"].dt.hour
 predictions["arrival_time"] = pd.to_datetime(predictions["arrival_time"], utc=True, errors="coerce")
 predictions["departure_time"] = pd.to_datetime(predictions["departure_time"], utc=True, errors="coerce")
+predictions["hour"] = predictions["arrival_time"].dt.hour
+predictions["fetched_hour"] = predictions["fetched_at"].dt.hour
 predictions["delay_seconds"] = (predictions["departure_time"] - predictions["arrival_time"]).dt.total_seconds()
 
 # ── TOP FILTER BAR ──────────────────────────────────────────────────────────
@@ -249,7 +242,10 @@ elif direction == "Outbound (away from downtown)":
     filtered = filtered[filtered["direction_id"] == 0]
 if selected_stop_id:
     filtered = filtered[filtered["stop_id"] == selected_stop_id]
-filtered = filtered[(filtered["hour"] >= time_range[0]) & (filtered["hour"] <= time_range[1])]
+filtered = filtered[
+    (filtered["hour"].isna()) |
+    ((filtered["hour"] >= time_range[0]) & (filtered["hour"] <= time_range[1]))
+]
 vehicles_filtered = vehicles[vehicles["route"].isin(selected_routes)] if selected_routes else vehicles
 
 # ── KPI ROW ─────────────────────────────────────────────────────────────────
@@ -273,7 +269,6 @@ c1, c2, c3 = st.columns([2, 2, 1])
 with c1:
     st.subheader("Live Vehicle Positions")
     map_data = vehicles_filtered.dropna(subset=["latitude", "longitude"])
-
     map_zoom = 14 if (selected_stop_id and stop_search != "All stops") else 11
     map_center = {"lat": 42.3601, "lon": -71.0589}
 
@@ -376,13 +371,8 @@ with c3:
             bordercolor="#2A4060",
             borderwidth=1,
             font=dict(size=9, color="#FFFFFF"),
-        )
-        )
-        fig.update_traces(
-            textfont=dict(size=9),
-            textinfo="percent",
-            pull=[0.05] * 10
-        )
+        ))
+        fig.update_traces(textfont=dict(size=9), textinfo="percent", pull=[0.05] * 10)
         st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
@@ -411,8 +401,9 @@ a1, a2, a3 = st.columns(3)
 
 with a1:
     st.subheader("Peak Hour Activity")
-    if len(filtered) > 0:
-        hour_counts = filtered.groupby("hour").size().reset_index(name="count")
+    hour_data = filtered.dropna(subset=["hour"])
+    if len(hour_data) > 0:
+        hour_counts = hour_data.groupby("hour").size().reset_index(name="count")
         hour_counts["hour_label"] = hour_counts["hour"].map(HOUR_LABELS)
         fig = px.bar(
             hour_counts, x="hour_label", y="count",
@@ -421,6 +412,8 @@ with a1:
         )
         fig.update_layout(showlegend=False, coloraxis_showscale=False, height=260, **CHART_LAYOUT)
         st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No arrival time data available")
 
 with a2:
     st.subheader("Delay Distribution by Route")
